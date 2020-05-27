@@ -1,4 +1,3 @@
-// Copyright (c) 2020 by the Zeek Project. See LICENSE for details.
 
 #include <hilti/ast/ctors/string.h>
 #include <hilti/ast/declarations/all.h>
@@ -13,6 +12,7 @@
 #include <hilti/compiler/detail/cxx/linker.h>
 #include <hilti/compiler/plugin.h>
 #include <hilti/compiler/unit.h>
+#include <iostream>
 
 using namespace hilti;
 using util::fmt;
@@ -23,18 +23,21 @@ using namespace hilti::detail::codegen;
 namespace {
 
 struct GlobalsVisitor : hilti::visitor::PreOrder<void, GlobalsVisitor> {
-    explicit GlobalsVisitor(CodeGen* cg) : cg(cg) {}
+    explicit GlobalsVisitor(CodeGen* cg, bool include_implementation)
+        : cg(cg), include_implementation(include_implementation) {}
 
     GlobalsVisitor(const GlobalsVisitor&) = delete;
     GlobalsVisitor(GlobalsVisitor&&) noexcept = delete;
 
     CodeGen* cg;
+    bool include_implementation;
+
     std::vector<cxx::declaration::Global> globals;
     std::vector<cxx::declaration::Global> constants;
 
     static void addDeclarations(CodeGen* cg, const Node& module, const ID& module_id, cxx::Unit* unit,
                                 bool include_implementation) {
-        auto v = GlobalsVisitor(cg);
+        auto v = GlobalsVisitor(cg, include_implementation);
         for ( auto i : v.walk(module) )
             v.dispatch(i);
 
@@ -133,6 +136,11 @@ struct GlobalsVisitor : hilti::visitor::PreOrder<void, GlobalsVisitor> {
                                           .linkage = "const"};
 
         constants.push_back(x);
+    }
+
+    void operator()(const declaration::Type& n) {
+        if ( include_implementation )
+            cg->addTypeInfoDefinition(n.type());
     }
 };
 
@@ -484,7 +492,7 @@ std::vector<cxx::Expression> CodeGen::compileCallArguments(const std::vector<Exp
     });
 }
 
-Result<cxx::Unit> CodeGen::compileModule(Node& root, hilti::Unit* hilti_unit) {
+Result<cxx::Unit> CodeGen::compileModule(Node& root, hilti::Unit* hilti_unit, bool include_implementation) {
     util::timing::Collector _("hilti/compiler/codegen");
 
     _cxx_unit = std::make_unique<cxx::Unit>(context());
@@ -494,7 +502,8 @@ Result<cxx::Unit> CodeGen::compileModule(Node& root, hilti::Unit* hilti_unit) {
     for ( auto i : v.walk(&root) )
         v.dispatch(i);
 
-    GlobalsVisitor::addDeclarations(this, root, ID(std::string(_cxx_unit->moduleID())), _cxx_unit.get(), true);
+    GlobalsVisitor::addDeclarations(this, root, ID(std::string(_cxx_unit->moduleID())), _cxx_unit.get(),
+                                    include_implementation);
 
     auto x = _need_decls;
     for ( const auto& t : x ) {
