@@ -1,0 +1,104 @@
+module DHCP;
+
+# RFC-2131: DHCP message, Table 1.
+public type Message = unit {
+    op: uint8 &convert=Opcode($$);
+    htype: uint8 &convert=HardwareType($$);
+    hlen: uint8;
+    hops: uint8;
+    xid: uint32;
+    secs: uint16;
+    flags: bitfield(16) {
+        reserved : 0..14;
+        broadcast : 15;
+    };
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64 &convert=$$.decode();
+    file_: bytes &size=128 &convert=$$.decode();
+    options: Options;
+
+    on %done { print self; }
+};
+
+# RFC-2131: DHCP message, Table 1, op.
+type Opcode = enum {
+    BOOTREQUEST = 0x01,
+    BOOTREPLY = 0x02
+};
+
+# RFC-1700: Adress Resolution Protocol Parameters, Hardware Type.
+type HardwareType = enum {
+    ETHERNET_10MB = 0x01,
+    EXPERIMENTAL_ETHERNET_3MB = 0x02,
+    AMATEUR_RADIO_AX_25 = 0x03,
+    PROTEON_PRONET_TOKEN_RING = 0x04,
+    CHAOS = 0x05,
+    IEEE_802_NETWORKS = 0x06,
+    ARCNET = 0x07,
+    HYPERCHANNEL = 0x08,
+    LANSTAR = 0x09
+};
+
+# RFC-1497: BOOTP Vendor Information Format.
+type Options = unit {
+    : b"\x63\x82\x53\x63"; # Magic Cookie.
+    options: Option[];
+};
+
+function list_to_option_code(xs: vector<uint8>): vector<OptionCode> {
+    return vector<OptionCode>();
+}
+
+# RFC-1533: DHCP Options.
+type Option = unit {
+    code: uint8 &convert=OptionCode($$);
+    switch ( self.code ) {
+        OptionCode::PAD, OptionCode::END -> : void {}
+        OptionCode::REQUESTED_ADDRESS -> {
+            len: uint8;
+            requested_address: addr &ipv4;
+        }
+        OptionCode::MESSAGE_TYPE -> {
+            : uint8;
+            message_type: uint8 &convert=MessageType($$);
+        }
+        OptionCode::PARAMETER_REQUESTS -> {
+            len: uint8;
+            request_values: uint8[self.len]; # &convert=[OptionCode(i) for i in $$];
+        }
+        OptionCode::CLIENT_IDENTIFIER -> {
+            len: uint8;
+            client_type_: uint8 &convert=HardwareType($$);
+            client_identifier: bytes &size=(self.len - 1);
+        }
+        * -> : UnparsedOption(self.code);
+    };
+};
+
+type OptionCode = enum {
+    PAD = 0,
+    REQUESTED_ADDRESS = 50,
+    MESSAGE_TYPE = 53,
+    PARAMETER_REQUESTS = 55,
+    CLIENT_IDENTIFIER = 61,
+    END = 255
+};
+
+type MessageType = enum {
+    DISCOVER = 0x01,
+    OFFER    = 0x02,
+    REQUEST  = 0x03,
+    DECLINE  = 0x04,
+    ACK      = 0x05,
+    NAK      = 0x06,
+    RELEASE  = 0x07
+};
+
+type UnparsedOption = unit(code: OptionCode) {
+    len: uint8 if ( code != OptionCode::PAD && code != OptionCode::END );
+    data: bytes &size=self.len if ( code != OptionCode::PAD && code != OptionCode::END );
+};
