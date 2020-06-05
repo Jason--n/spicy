@@ -49,6 +49,8 @@ type Options = unit {
     options: Option[];
 };
 
+function uint8_to_option_code(xs: vector<uint8>): vector<OptionCode> { return vector<OptionCode>(); }
+
 # RFC-1533: DHCP Options.
 type Option = unit {
     code: uint8 &convert=OptionCode($$);
@@ -64,7 +66,7 @@ type Option = unit {
         }
         OptionCode::PARAMETER_REQUESTS -> {
             len: uint8;
-            request_values: uint8[] &size=self.len; # TODO(bbannier): convert this to `OptionCode[]`.
+            request_values: uint8[] &size=self.len &convert=uint8_to_option_code($$);
         }
         OptionCode::CLIENT_IDENTIFIER -> {
             len: uint8;
