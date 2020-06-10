@@ -4,3 +4,5 @@ protocol analyzer spicy::DHCP over UDP:
     port 68/udp;
 
 import DHCP;
+
+on DHCP::Message -> event DHCP::log_dhcp(self);
