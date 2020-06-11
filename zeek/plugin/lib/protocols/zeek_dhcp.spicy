@@ -1,0 +1,11 @@
+# Copyright (c) 2020 by the Zeek Project. See LICENSE for details.
+
+module Zeek_DHCP;
+
+import DHCP from protocols;
+import spicy;
+import zeek;
+
+public function create_msg(msg: DHCP::message) : DHCP::Info {
+
+}
