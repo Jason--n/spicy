@@ -3,9 +3,58 @@
 module Zeek_DHCP;
 
 import DHCP from protocols;
-import spicy;
-import zeek;
 
-public function create_msg(msg: DHCP::message) : DHCP::Info {
-
+public function create_msg(msg: DHCP::Message):
+    tuple<
+        ts: time,
+        uids: set<string>,
+        client_addr: addr,
+        server_addr: addr,
+        client_port: port,
+        server_port: port,
+        mac: string,
+        host_name: string,
+        client_fqdn: string,
+        domain: string,
+        requested_addr: addr,
+        assigned_addr: addr,
+        lease_time: real,
+        client_message: string,
+        server_message: string,
+        msg_types: vector<string>,
+        duration: real,
+        last_message_ts: time,
+        msg_orig: vector<addr>,
+        client_software: string,
+        server_software: string,
+        circuit_id: string,
+        agent_remote_id: string,
+        subscribed_id: string> {
+    print("creating message: ");
+    return (
+        time(0),
+        set(""),
+        0.0.0.0,
+        0.0.0.0,
+        68/udp,
+        68/udp,
+        "",
+        "",
+        "",
+        "",
+        0.0.0.0,
+        0.0.0.0,
+        0.0,
+        "",
+        "",
+        vector<string>(),
+        0.0,
+        time(0),
+        vector<addr>(),
+        "",
+        "",
+        "",
+        "",
+        "",
+        );
 }

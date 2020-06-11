@@ -20,8 +20,6 @@ public type Message = unit {
     sname: bytes &size=64 &convert=$$.decode();
     file_: bytes &size=128 &convert=$$.decode();
     options: Options;
-
-    on %done { print self; }
 };
 
 # RFC-2131: DHCP message, Table 1, op.
