@@ -6,4 +6,4 @@ protocol analyzer spicy::DHCP over UDP:
 
 import Zeek_DHCP;
 
-on DHCP::Message -> event DHCP::log_dhcp($conn, $is_orig, Zeek_DHCP::create_msg(self));
+on DHCP::Message -> event DHCP::dhcp_message($conn, $is_orig, Zeek_DHCP::create_msg(self), Zeek_DHCP::create_options(self));

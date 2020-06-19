@@ -3,58 +3,117 @@
 module Zeek_DHCP;
 
 import DHCP from protocols;
+# import DHCP;
+import zeek;
 
-public function create_msg(msg: DHCP::Message):
+on DHCP::Message::%done {
+    zeek::confirm_protocol();
+}
+
+on DHCP::Message::%error {
+    zeek::reject_protocol("error while parsing DHCP request");
+}
+
+public function create_options(msg: DHCP::Message):
     tuple<
-        ts: time,
-        uids: set<string>,
-        client_addr: addr,
-        server_addr: addr,
-        client_port: port,
-        server_port: port,
-        mac: string,
+        options: vector<uint32>,
+        subnet_mask: addr,
+        routers: vector<addr>,
+        dns_servers: vector<addr>,
         host_name: string,
-        client_fqdn: string,
-        domain: string,
-        requested_addr: addr,
-        assigned_addr: addr,
-        lease_time: real,
-        client_message: string,
-        server_message: string,
-        msg_types: vector<string>,
-        duration: real,
-        last_message_ts: time,
-        msg_orig: vector<addr>,
-        client_software: string,
-        server_software: string,
-        circuit_id: string,
-        agent_remote_id: string,
-        subscribed_id: string> {
-    print("creating message: ");
+        domain_name: string,
+        forwarding: bool,
+        broadcast: addr,
+        vendor: string,
+        nbns: vector<addr>,
+        addr_request: addr,
+        lease: interval,
+        serv_addr: addr,
+        param_list: vector<uint32>,
+        message: string,
+        max_msg_size: uint32,
+        renewal_time: interval,
+        rebinding_time: interval,
+        vendor_class: string,
+        client_id: tuple<
+            hwtype: uint32,
+            hwaddr: string>,
+        user_class: string,
+        client_fqdn: tuple<
+            flags: uint32,
+            rcode1: uint32,
+            rcode2: uint32,
+            domain_name: string>,
+        sub_opt: vector<tuple<
+            code: uint32,
+            value: string>>,
+        auto_config: bool,
+        auto_proxy_config: string,
+        time_offset: int64,
+        time_servers: vector<addr>,
+        name_servers: vector<addr>,
+        ntp_servers: vector<addr>>
+{
+    print("NOPE: create_msg");
     return (
-        time(0),
-        set(""),
+        vector<uint32>(),
         0.0.0.0,
-        0.0.0.0,
-        68/udp,
-        68/udp,
-        "",
-        "",
-        "",
-        "",
-        0.0.0.0,
-        0.0.0.0,
-        0.0,
-        "",
-        "",
-        vector<string>(),
-        0.0,
-        time(0),
+        vector<addr>(),
         vector<addr>(),
         "",
         "",
+        False,
+        0.0.0.0,
+        "",
+        vector<addr>(),
+        0.0.0.0,
+        cast<interval>(0),
+        0.0.0.0,
+        vector<uint32>(),
+        "",
+        0,
+        cast<interval>(0),
+        cast<interval>(0),
+        "",
+        (0, ""),
+        "",
+        (0, 0, 0, ""),
+        vector<tuple<uint32, string>>(),
+        False,
+        "",
+        0,
+        vector<addr>(),
+        vector<addr>(),
+        vector<addr>());
+}
+
+public function create_msg(msg: DHCP::Message):
+    tuple<
+        op: uint32,
+        m_type: uint32,
+        xid: uint32,
+        secs: interval,
+        flags: uint32,
+        ciaddr: addr,
+        yiaddr: addr,
+        siaddr: addr,
+        giaddr: addr,
+        chaddr: string,
+        sname: string,
+        file_n: string> {
+print("NOPE: create_options");
+    return (
+        0,
+        0,
+        0,
+        cast<interval>(0),
+        0,
+        0.0.0.0,
+        0.0.0.0,
+        0.0.0.0,
+        0.0.0.0,
         "",
         "",
-        "",
-        );
+        "");
+
 }
