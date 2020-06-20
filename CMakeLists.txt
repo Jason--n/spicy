@@ -2,11 +2,44 @@
 
 cmake_minimum_required(VERSION 3.15.0)
 
+project(spicy VERSION "${SPICY_VERSION}" LANGUAGES ASM C CXX)
+
+# copy from https://stackoverflow.com/questions/53877344/cannot-configure-cmake-to-look-for-homebrew-installed-version-of-bison
+
+# On macOS, search Homebrew for keg-only versions of Bison and Flex. Xcode does
+# not provide new enough versions for us to use.
+if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
+    execute_process(
+            COMMAND brew --prefix bison
+            RESULT_VARIABLE BREW_BISON
+            OUTPUT_VARIABLE BREW_BISON_PREFIX
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if (BREW_BISON EQUAL 0 AND EXISTS "${BREW_BISON_PREFIX}")
+        message(STATUS "Found Bison keg installed by Homebrew at ${BREW_BISON_PREFIX}")
+        set(BISON_EXECUTABLE "${BREW_BISON_PREFIX}/bin/bison")
+    endif()
+
+    execute_process(
+            COMMAND brew --prefix flex
+            RESULT_VARIABLE BREW_FLEX
+            OUTPUT_VARIABLE BREW_FLEX_PREFIX
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if (BREW_FLEX EQUAL 0 AND EXISTS "${BREW_FLEX_PREFIX}")
+        message(STATUS "Found Flex keg installed by Homebrew at ${BREW_FLEX_PREFIX}")
+        set(FLEX_EXECUTABLE "${BREW_FLEX_PREFIX}/bin/flex")
+        set(FLEX_INCLUDE_DIR "${BREW_FLEX_PREFIX}/include")
+    endif()
+endif()
+
+find_package(bison REQUIRED)
+find_package(flex REQUIRED)
+
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/autogen-version --cmake
     OUTPUT_VARIABLE SPICY_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-project(spicy VERSION "${SPICY_VERSION}" LANGUAGES ASM C CXX)
 
 set(flex_minimum_version "2.6")
 set(bison_minimum_version "3.4")
@@ -161,6 +194,8 @@ find_package(GoldLinker)
 find_package(Filesystem REQUIRED COMPONENTS Experimental Final)
 find_package(ClangJIT)
 find_package(Zeek)
+
+set(HILTI_HAVE_JIT yes)
 
 if ( NOT CLANG_JIT_FOUND )
     set(HILTI_HAVE_JIT no)

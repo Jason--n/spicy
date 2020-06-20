@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-find_package(BISON REQUIRED)
-find_package(FLEX REQUIRED)
+#find_package(BISON REQUIRED)
+#find_package(FLEX REQUIRED)
 
 set(autogen "${CMAKE_CURRENT_BINARY_DIR}/justrx/autogen")
 
